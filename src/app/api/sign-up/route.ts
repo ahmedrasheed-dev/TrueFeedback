@@ -4,12 +4,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationEmail } from '@/helpers/sendVerificationEmail';
 import { ApiResponse } from '@/types/ApiResponse';
 import UserModel from '@/models/User';
+import { signUpSchema } from '@/schemas/signUpSchema';
 
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
     try {
         await dbConnect();
 
-        const { email, username, password } = await request.json();
+        const body = await request.json();
+        const parsed = signUpSchema.safeParse(body);
+
+        if (!parsed.success) {
+            return NextResponse.json<ApiResponse>(
+                { success: false, message: parsed.error.issues[0].message },
+                { status: 400 }
+            );
+        }
+
+        const { email, username, password } = parsed.data;
         const existingUserVerifiedByUsername = await UserModel.findOne({
             username,
             isVerified: true
@@ -31,6 +42,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                 existingUserByEmail.verifyCode = verifyCode;
                 existingUserByEmail.verifyCodeExpiry = new Date(Date.now() + 3600000)
                 await existingUserByEmail.save()
+
+                const emailResponse = await sendVerificationEmail(email, username, verifyCode);
+                if (!emailResponse.success) {
+                    return NextResponse.json<ApiResponse>(
+                        { success: false, message: 'Could not send verification email' },
+                        { status: 502 },
+                    );
+                }
+
+                return NextResponse.json<ApiResponse>(
+                    { success: true, message: 'Verification email resent, please verify your email' },
+                    { status: 200 },
+                );
             }
         } else {
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -62,6 +86,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
                 { status: 201 },
             );
         }
+
+        return NextResponse.json<ApiResponse>(
+            { success: false, message: 'Unable to complete signup' },
+            { status: 500 },
+        );
     } catch (error) {
         console.error(error);
         return NextResponse.json<ApiResponse>({ success: false, message: 'Failed to sign up' }, { status: 500 });
