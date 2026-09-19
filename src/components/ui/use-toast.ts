@@ -8,13 +8,7 @@ type ToastOptions = {
 
 export function useToast() {
     return {
-        toast: ({ title, description, variant }: ToastOptions) => {
-            toastManager.add({
-                title,
-                description,
-                type: variant === "destructive" ? "error" : "success",
-            });
-        },
+        toast,
     };
 }
 

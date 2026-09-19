@@ -12,12 +12,8 @@ export function ThemeToggle() {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        const savedTheme = window.localStorage.getItem(themeStorageKey) as Theme | null;
-        const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        const nextTheme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : preferredTheme;
-
-        document.documentElement.classList.toggle('dark', nextTheme === 'dark');
-        setTheme(nextTheme);
+        const isDark = document.documentElement.classList.contains('dark');
+        setTheme(isDark ? 'dark' : 'light');
         setIsMounted(true);
     }, []);
 
@@ -29,14 +25,19 @@ export function ThemeToggle() {
         setTheme(nextTheme);
     };
 
+    if (!isMounted) {
+        return (
+            <div className="h-9 w-9 rounded-xl border border-stone-200/80 bg-stone-100/50 dark:border-stone-800 dark:bg-stone-900/50" />
+        );
+    }
+
     return (
         <button
             type="button"
             onClick={toggleTheme}
-            disabled={!isMounted}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-700 shadow-sm backdrop-blur transition-colors hover:bg-white hover:text-stone-950 disabled:cursor-default disabled:opacity-0 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-white"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-stone-200 bg-white/80 text-stone-700 shadow-xs backdrop-blur transition-colors hover:bg-stone-100 hover:text-stone-950 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-white"
         >
             {theme === 'dark' ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
         </button>

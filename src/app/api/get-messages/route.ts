@@ -27,8 +27,8 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse>> 
         ]);
         if (!user || user.length === 0) {
             return NextResponse.json<ApiResponse>(
-                { success: false, message: "User not found" },
-                { status: 404 }
+                { success: true, message: "No messages found", data: [] },
+                { status: 200 }
             );
         }
         return NextResponse.json<ApiResponse>(

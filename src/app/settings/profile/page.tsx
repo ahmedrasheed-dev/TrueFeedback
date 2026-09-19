@@ -61,7 +61,7 @@ export default function ProfileSettingsPage() {
     };
 
     if (status === 'loading') {
-        return <div className="min-h-screen bg-[#f5f3ef]" />;
+        return <div className="min-h-screen bg-[#f5f3ef] dark:bg-stone-950" />;
     }
 
     if (status === 'unauthenticated') {
