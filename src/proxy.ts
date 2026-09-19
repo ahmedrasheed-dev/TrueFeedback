@@ -6,14 +6,7 @@ export default withAuth(
         const token = req.nextauth.token;
         const { pathname } = req.nextUrl;
 
-        if (
-            token && (
-                pathname.startsWith("/sign-in") ||
-                pathname.startsWith("/sign-up") ||
-                pathname === "/" ||
-                pathname.startsWith("/verify")
-            )
-        ) {
+        if (token && (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))) {
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
 
@@ -25,17 +18,23 @@ export default withAuth(
     },
     {
         callbacks: {
-            authorized: ({ token }) => Boolean(token),
+            authorized: ({ token, req }) => {
+                const pathname = req.nextUrl.pathname;
+
+                if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")) {
+                    return true;
+                }
+
+                return Boolean(token);
+            },
         },
     }
 );
 
 export const config = {
     matcher: [
-        "/",
+        "/dashboard/:path*",
         "/sign-in",
         "/sign-up",
-        "/dashboard/:path*",
-        "/verify/:path*",
     ],
 };
