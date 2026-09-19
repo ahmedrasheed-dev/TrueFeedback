@@ -9,7 +9,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { usernameValidation } from '@/schemas/signUpSchema';
 
 export default function ProfileSettingsPage() {
@@ -78,7 +77,6 @@ export default function ProfileSettingsPage() {
                         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                         Back to dashboard
                     </Link>
-                    <ThemeToggle />
                 </div>
 
                 <section className="rounded-[28px] border border-stone-200 bg-[#f9f7f4] p-6 shadow-[0_30px_80px_rgba(28,25,23,0.08)] dark:border-stone-800 dark:bg-stone-900 dark:shadow-[0_30px_80px_rgba(0,0,0,0.3)] sm:p-10">

@@ -10,6 +10,10 @@ export default withAuth(
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
 
+        if (token?.isVerified && pathname.startsWith("/verify")) {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+
         if (!token && pathname.startsWith("/dashboard")) {
             return NextResponse.redirect(new URL("/sign-in", req.url));
         }
@@ -25,6 +29,10 @@ export default withAuth(
                     return true;
                 }
 
+                if (pathname.startsWith("/verify")) {
+                    return true;
+                }
+
                 return Boolean(token);
             },
         },
@@ -35,6 +43,7 @@ export const config = {
     matcher: [
         "/dashboard/:path*",
         "/settings/:path*",
+        "/verify/:path*",
         "/sign-in",
         "/sign-up",
     ],
