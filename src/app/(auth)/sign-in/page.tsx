@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { signInSchema } from '@/schemas/signInSchema';
+import { Globe2 } from 'lucide-react';
 
 export default function SignInForm() {
     const router = useRouter();
@@ -65,6 +66,9 @@ export default function SignInForm() {
     };
 
     const isSubmitting = form.formState.isSubmitting;
+    const continueWithGoogle = () => {
+        void signIn('google', { callbackUrl: '/dashboard' });
+    };
 
     return (
         <div className="relative min-h-screen bg-[#f5f3ef] px-4 py-10 text-stone-900 transition-colors sm:px-6 lg:px-8 dark:bg-stone-950 dark:text-stone-100">
@@ -163,6 +167,22 @@ export default function SignInForm() {
                             {isSubmitting ? 'Signing in...' : 'Sign in'}
                         </Button>
                     </form>
+
+                    <div className="my-6 flex items-center gap-3 text-xs text-stone-400 dark:text-stone-500">
+                        <span className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
+                        <span>OR CONTINUE WITH</span>
+                        <span className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
+                    </div>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={continueWithGoogle}
+                        className="w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
+                    >
+                        <Globe2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                        Continue with Google
+                    </Button>
 
                     <div className="mt-auto border-t border-stone-200 pt-5 text-center text-sm text-stone-600 dark:border-stone-800 dark:text-stone-400">
                         <p>

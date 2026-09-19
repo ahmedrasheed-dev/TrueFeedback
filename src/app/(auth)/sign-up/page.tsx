@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDebounceValue } from 'usehooks-ts';
-import { Loader2 } from 'lucide-react';
+import { Globe2, Loader2 } from 'lucide-react';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,9 @@ export default function SignUpForm() {
     const isUsernameTaken = usernameCheck.tone === 'error' && usernameCheck.message.toLowerCase().includes('taken');
     const isUsernameInvalid = Boolean(form.formState.errors.username) || isUsernameTaken;
     const isSubmitDisabled = isCheckingUsername || isUsernameTaken || form.formState.isSubmitting;
+    const continueWithGoogle = () => {
+        void signIn('google', { callbackUrl: '/dashboard' });
+    };
 
     const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
         try {
@@ -309,6 +313,22 @@ export default function SignUpForm() {
                             )}
                         </Button>
                     </form>
+
+                    <div className="my-6 flex items-center gap-3 text-xs text-stone-400 dark:text-stone-500">
+                        <span className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
+                        <span>OR CONTINUE WITH</span>
+                        <span className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
+                    </div>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={continueWithGoogle}
+                        className="w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
+                    >
+                        <Globe2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                        Continue with Google
+                    </Button>
 
                     <div className="mt-auto border-t border-stone-200 pt-5 text-center text-sm text-stone-600 dark:border-stone-800 dark:text-stone-400">
                         <p>
