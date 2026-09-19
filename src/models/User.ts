@@ -16,6 +16,8 @@ export interface User extends Document {
     password: string;
     verifyCode: string;
     verifyCodeExpiry: Date;
+    resetCode?: string;
+    resetCodeExpiry?: Date;
     isAcceptingMessages: boolean;
     isVerified: boolean;
     provider?: string;
@@ -46,6 +48,14 @@ const userSchema: Schema<User> = new Schema({
         default: "",
     },
     verifyCodeExpiry: {
+        type: Date,
+        default: null,
+    },
+    resetCode: {
+        type: String,
+        default: "",
+    },
+    resetCodeExpiry: {
         type: Date,
         default: null,
     },
