@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { signInSchema } from '@/schemas/signInSchema';
-import { Globe2 } from 'lucide-react';
 
 export default function SignInForm() {
     const router = useRouter();
@@ -125,7 +124,7 @@ export default function SignInForm() {
                                     {...form.register('identifier')}
                                     aria-invalid={Boolean(form.formState.errors.identifier)}
                                     data-invalid={Boolean(form.formState.errors.identifier)}
-                                    className={form.formState.errors.identifier ? 'border-red-500 focus-visible:ring-red-500/30' : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'}
+                                    className={`h-11 ${form.formState.errors.identifier ? 'border-red-500 focus-visible:ring-red-500/30' : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'}`}
                                 />
                                 <FieldError className="min-h-5 text-xs text-red-600">
                                     {form.formState.errors.identifier?.message}
@@ -151,7 +150,7 @@ export default function SignInForm() {
                                     {...form.register('password')}
                                     aria-invalid={Boolean(form.formState.errors.password)}
                                     data-invalid={Boolean(form.formState.errors.password)}
-                                    className={form.formState.errors.password ? 'border-red-500 focus-visible:ring-red-500/30' : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'}
+                                    className={`h-11 ${form.formState.errors.password ? 'border-red-500 focus-visible:ring-red-500/30' : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'}`}
                                 />
                                 <FieldError className="min-h-5 text-xs text-red-600">
                                     {form.formState.errors.password?.message}
@@ -161,7 +160,7 @@ export default function SignInForm() {
 
                         <Button
                             type="submit"
-                            className="w-full rounded-xl bg-stone-900 text-sm font-medium text-white shadow-[0_10px_25px_rgba(24,24,27,0.25)] transition-all hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                            className="h-11 w-full rounded-xl bg-stone-900 text-sm font-medium text-white shadow-[0_10px_25px_rgba(24,24,27,0.25)] transition-all hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? 'Signing in...' : 'Sign in'}
@@ -178,9 +177,9 @@ export default function SignInForm() {
                         type="button"
                         variant="outline"
                         onClick={continueWithGoogle}
-                        className="w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
+                        className="h-11 w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
                     >
-                        <Globe2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                        <img src="/google.svg" alt="" className="mr-2 h-4 w-4" aria-hidden="true" />
                         Continue with Google
                     </Button>
 

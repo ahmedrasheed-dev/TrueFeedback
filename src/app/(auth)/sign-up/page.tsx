@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDebounceValue } from 'usehooks-ts';
-import { Globe2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Field, FieldContent, FieldError, FieldLabel } from '@/components/ui/field';
 import { useToast } from '@/components/ui/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { signUpSchema } from '@/schemas/signUpSchema';
+import { signUpSchema, usernameValidation } from '@/schemas/signUpSchema';
 import { ApiResponse } from '@/types/ApiResponse';
 
 export default function SignUpForm() {
@@ -40,38 +40,40 @@ export default function SignUpForm() {
 
     const usernameValue = form.watch('username');
     const [debouncedUsername] = useDebounceValue(usernameValue, 400);
+    const usernameField = form.register('username');
 
     useEffect(() => {
-        const trimmedUsername = debouncedUsername.trim();
+        const parsedUsername = usernameValidation.safeParse(debouncedUsername);
 
-        if (!trimmedUsername) {
+        if (!debouncedUsername) {
             setUsernameCheck({ tone: 'neutral', message: '' });
+            setIsCheckingUsername(false);
             return;
         }
 
-        if (trimmedUsername.length < 2) {
+        if (!parsedUsername.success) {
             setUsernameCheck({ tone: 'neutral', message: '' });
+            setIsCheckingUsername(false);
             return;
         }
 
-        let isMounted = true;
-        const controller = new AbortController();
+        const validUsername = parsedUsername.data;
+        let isCurrent = true;
 
         const checkUsername = async () => {
             setIsCheckingUsername(true);
 
             try {
                 const response = await fetch(
-                    `/api/check-username-unique?username=${encodeURIComponent(trimmedUsername)}`,
+                    `/api/check-username-unique?username=${encodeURIComponent(validUsername)}`,
                     {
                         method: 'GET',
-                        signal: controller.signal,
                     }
                 );
 
                 const data: ApiResponse = await response.json();
 
-                if (!isMounted) return;
+                if (!isCurrent) return;
 
                 if (!response.ok || !data.success) {
                     setUsernameCheck({
@@ -88,16 +90,14 @@ export default function SignUpForm() {
                     message: data.message,
                 });
             } catch (error) {
-                if (!isMounted || (error instanceof DOMException && error.name === 'AbortError')) {
-                    return;
-                }
+                if (!isCurrent) return;
 
                 setUsernameCheck({
                     tone: 'error',
                     message: 'Could not check username availability.',
                 });
             } finally {
-                if (isMounted) {
+                if (isCurrent) {
                     setIsCheckingUsername(false);
                 }
             }
@@ -106,19 +106,19 @@ export default function SignUpForm() {
         checkUsername();
 
         return () => {
-            isMounted = false;
-            controller.abort();
+            isCurrent = false;
         };
     }, [debouncedUsername]);
 
-    const usernameStatusClass = useMemo(() => {
-        if (usernameCheck.tone === 'success') return 'text-emerald-600';
-        if (usernameCheck.tone === 'error') return 'text-red-600';
-        return 'text-stone-500';
-    }, [usernameCheck.tone]);
+    const usernameStatusClass = usernameCheck.tone === 'success'
+        ? 'text-emerald-600'
+        : usernameCheck.tone === 'error'
+            ? 'text-red-600'
+            : 'text-stone-500';
 
     const isUsernameTaken = usernameCheck.tone === 'error' && usernameCheck.message.toLowerCase().includes('taken');
-    const isUsernameInvalid = Boolean(form.formState.errors.username) || isUsernameTaken;
+    const isUsernameFormatInvalid = Boolean(usernameValue) && !usernameValidation.safeParse(usernameValue).success;
+    const isUsernameInvalid = Boolean(form.formState.errors.username) || isUsernameTaken || isUsernameFormatInvalid;
     const isSubmitDisabled = isCheckingUsername || isUsernameTaken || form.formState.isSubmitting;
     const continueWithGoogle = () => {
         void signIn('google', { callbackUrl: '/dashboard' });
@@ -210,14 +210,17 @@ export default function SignUpForm() {
                                         type="text"
                                         autoComplete="username"
                                         placeholder="john123"
-                                        {...form.register('username')}
+                                        {...usernameField}
+                                        onChange={(event) => {
+                                            event.target.value = event.target.value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
+                                            void usernameField.onChange(event);
+                                        }}
                                         aria-invalid={isUsernameInvalid}
                                         data-invalid={isUsernameInvalid}
-                                        className={
-                                            isUsernameInvalid
-                                                ? 'border-red-500 focus-visible:ring-red-500/30'
-                                                : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
-                                        }
+                                        className={`h-11 ${isUsernameInvalid
+                                            ? 'border-red-500 focus-visible:ring-red-500/30'
+                                            : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
+                                            }`}
                                     />
                                     {isCheckingUsername && (
                                         <Loader2 className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-stone-400" aria-label="Checking username" />
@@ -228,7 +231,7 @@ export default function SignUpForm() {
                                         ? 'text-stone-500'
                                         : usernameCheck.message
                                             ? usernameStatusClass
-                                            : 'text-red-600'
+                                            : 'text-stone-500'
                                         }`}
                                     aria-live="polite"
                                 >
@@ -238,7 +241,7 @@ export default function SignUpForm() {
                                             Checking username
                                         </>
                                     ) : (
-                                        usernameCheck.message || form.formState.errors.username?.message || '\u00a0'
+                                        usernameCheck.message || '\u00a0'
                                     )}
                                 </p>
                                 <FieldError className="min-h-5 text-xs text-red-600">
@@ -260,11 +263,10 @@ export default function SignUpForm() {
                                     {...form.register('email')}
                                     aria-invalid={Boolean(form.formState.errors.email)}
                                     data-invalid={Boolean(form.formState.errors.email)}
-                                    className={
-                                        form.formState.errors.email
-                                            ? 'border-red-500 focus-visible:ring-red-500/30'
-                                            : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
-                                    }
+                                    className={`h-11 ${form.formState.errors.email
+                                        ? 'border-red-500 focus-visible:ring-red-500/30'
+                                        : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
+                                        }`}
                                 />
                                 <p className="text-xs text-stone-500 dark:text-stone-400">We’ll send a verification code to confirm your email.</p>
                                 <FieldError className="min-h-5 text-xs text-red-600">
@@ -286,11 +288,10 @@ export default function SignUpForm() {
                                     {...form.register('password')}
                                     aria-invalid={Boolean(form.formState.errors.password)}
                                     data-invalid={Boolean(form.formState.errors.password)}
-                                    className={
-                                        form.formState.errors.password
-                                            ? 'border-red-500 focus-visible:ring-red-500/30'
-                                            : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
-                                    }
+                                    className={`h-11 ${form.formState.errors.password
+                                        ? 'border-red-500 focus-visible:ring-red-500/30'
+                                        : 'border-stone-200 bg-white text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100'
+                                        }`}
                                 />
                                 <FieldError className="min-h-5 text-xs text-red-600">
                                     {form.formState.errors.password?.message}
@@ -300,7 +301,7 @@ export default function SignUpForm() {
 
                         <Button
                             type="submit"
-                            className="w-full rounded-xl bg-stone-900 text-sm font-medium text-white shadow-[0_10px_25px_rgba(24,24,27,0.25)] transition-all hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                            className="h-11 w-full rounded-xl bg-stone-900 text-sm font-medium text-white shadow-[0_10px_25px_rgba(24,24,27,0.25)] transition-all hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                             disabled={isSubmitDisabled}
                         >
                             {form.formState.isSubmitting ? (
@@ -324,9 +325,9 @@ export default function SignUpForm() {
                         type="button"
                         variant="outline"
                         onClick={continueWithGoogle}
-                        className="w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
+                        className="h-11 w-full rounded-xl border-stone-200 bg-white text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:hover:bg-stone-800"
                     >
-                        <Globe2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                        <img src="/google.svg" alt="" className="mr-2 h-4 w-4" aria-hidden="true" />
                         Continue with Google
                     </Button>
 
